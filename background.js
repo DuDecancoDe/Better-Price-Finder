@@ -1,7 +1,4 @@
-// background.js
-// Service worker: receives extracted product info from the content script
-// and builds ready-made search links for comparing the price elsewhere.
-// No external API calls — everything here is a locally-built URL.
+
 
 const DEFAULT_SETTINGS = { sameBrandSearch: false };
 
