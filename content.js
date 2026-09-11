@@ -61,9 +61,7 @@
     }
   }
 
-  // JSON-LD `name` is often a string, but templates also emit arrays,
-  // language maps, and `{ "@value": "..." }` objects. Those are truthy
-  // but are not usable titles until flattened.
+
   function jsonLdText(value, depth) {
     if (value == null || (depth || 0) > 4) return null;
     if (typeof value === "string") {
@@ -109,10 +107,7 @@
     }
     return null;
   }
-
-  // Site chrome frequently contains its own <h1> for the logo, and its own
-  // price-looking text (e.g. nav "deals" links). Skip that — but do not skip
-  // every HTML <header>: product/article headers commonly wrap the real title.
+  
   function isSiteHeader(header) {
     if (!header) return false;
     if (header.getAttribute("role") === "banner") return true;
@@ -155,11 +150,7 @@
     return null;
   }
 
-  // [itemprop="name"] alone is too broad — it also matches breadcrumb trails
-  // (BreadcrumbList/ListItem microdata) and site/organization branding, which
-  // sit earlier in the DOM than the actual product and get matched first.
-  // Only trust it when the element sits inside a microdata scope that is
-  // itself typed as a Product.
+
   function getScopedProductName() {
     const candidates = document.querySelectorAll('[itemprop="name"]');
     const fallbacks = [];
@@ -176,8 +167,7 @@
       if (/Product/i.test(itemtype)) return text;
       fallbacks.push(text);
     }
-    // Unscoped itemprop=name still beats a logo h1; pick the longest value
-    // so a breadcrumb crumb like "Home" loses to the real product name.
+    
     fallbacks.sort((a, b) => b.length - a.length);
     return fallbacks[0] || null;
   }
@@ -198,19 +188,17 @@
       (seg) => !siteName || seg.toLowerCase() !== siteName.toLowerCase()
     );
     const candidates = withoutSiteName.length ? withoutSiteName : segments;
-    // The product name is almost always the most specific (longest) segment;
-    // the site/brand name segment is usually short and repeats on every page.
+
     candidates.sort((a, b) => b.length - a.length);
     return candidates[0];
   }
 
   function getProductTitle(siteName) {
-    // 1. Microdata name, but only when it's actually scoped to a Product —
-    // not a breadcrumb crumb or organization/site name.
+
     const scopedName = getScopedProductName();
     if (scopedName) return scopedName;
 
-    // 2. Explicit product-name class/attribute markup, skipping header/nav/footer.
+
     const specific = textFromSelectorsExcludingChrome([
       "#productTitle",
       ".product-title",
@@ -227,12 +215,11 @@
     ]);
     if (specific) return specific;
 
-    // 3. Any remaining <h1> that isn't part of the site chrome.
+
     const h1 = textFromSelectorsExcludingChrome(["h1"]);
     if (h1) return h1;
 
-    // 4. og:title, but only if it isn't just the site name (common on sites
-    // that don't update meta tags on client-side navigation).
+ 
     const ogTitle = cleanDocumentTitle(
       metaContent('meta[property="og:title"]') ||
         metaContent('meta[name="twitter:title"]'),
@@ -242,7 +229,6 @@
       return ogTitle;
     }
 
-    // 5. document.title, stripped of the trailing/leading " | Site Name" part.
     return cleanDocumentTitle(document.title, siteName);
   }
 
@@ -264,7 +250,6 @@
     if (!str) return null;
     const cleaned = String(str).replace(/[^0-9.,]/g, "");
     if (!cleaned) return null;
-    // Handle both 1,234.56 and 1.234,56 styles by keeping the last separator as decimal
     const normalized = cleaned.replace(/,(?=\d{3}(\D|$))/g, "");
     const num = parseFloat(normalized.replace(",", "."));
     return Number.isFinite(num) ? num : null;
@@ -336,7 +321,7 @@
     for (const brand of candidates) {
       if (isGenericRetailerName(brand)) continue;
       if (siteName && brand.toLowerCase() === siteName.trim().toLowerCase()) {
-        // On a brand's own store (nike.com) this is still the right brand.
+     
         const host = location.hostname.replace(/^www\./, "").split(".")[0];
         const brandKey = brand.toLowerCase().replace(/[^a-z0-9]/g, "");
         const hostKey = host.toLowerCase().replace(/[^a-z0-9]/g, "");
@@ -359,16 +344,14 @@
     const products = parseJsonLdProducts();
     const node = products.length > 0 ? products[0] : null;
 
-    // 1. Structured data (most reliable)
+
     if (node) {
       const offer = firstOffer(node);
       const price = offer
         ? parsePriceString(offer.price || offer.lowPrice || offer.highPrice)
         : null;
       const currency = offer ? offer.priceCurrency : null;
-      // Prefer the JSON-LD name, but if a site reuses one static JSON-LD
-      // block across pages (rare, but seen on some templates), fall back to
-      // the same DOM-scoped title logic used elsewhere.
+      
       let title =
         jsonLdText(node.name) || jsonLdText(node.headline) || jsonLdText(node.title);
       if (!title || isLikelySiteName(title, siteName)) {
@@ -389,8 +372,6 @@
       }
     }
 
-    // 2. Open Graph / meta price tags, paired with the DOM-scoped title
-    // (not og:title directly — see getProductTitle for why).
     const metaPrice =
       metaContent('meta[property="product:price:amount"]') ||
       metaContent('meta[property="og:price:amount"]') ||
@@ -412,9 +393,7 @@
       }
     }
 
-    // 3. Common on-page price selectors (broad fallback for sites without
-    // structured data). This list intentionally covers widely used patterns
-    // rather than one specific retailer.
+
     const priceText = textFromSelectorsExcludingChrome([
       "#priceblock_ourprice",
       "#priceblock_dealprice",
@@ -444,8 +423,7 @@
     if (typeof product.title !== "string" || product.title.trim().length <= 2) {
       return false;
     }
-    // Reject titles that are just the site/brand name — the clearest sign
-    // we fell all the way back to a stale document.title or site header.
+
     if (isLikelySiteName(product.title, siteName)) return false;
     return true;
   }
@@ -505,10 +483,7 @@
     );
   }
 
-  // Many storefronts render the product title/price client-side after the
-  // initial page load (React/Vue apps), so a single check right at "load"
-  // can still catch stale placeholder content. Retry a few times with
-  // backoff, and stop as soon as a plausible, non-generic product is found.
+
   const RETRY_DELAYS_MS = [600, 1400, 2600, 4200];
 
   function attemptExtraction(attempt = 0) {
@@ -535,8 +510,7 @@
     window.addEventListener("load", () => setTimeout(run, RETRY_DELAYS_MS[0]));
   }
 
-  // Allow the popup to force a re-check, e.g. on single-page apps where the
-  // URL/content changed without a full page load.
+
   chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.type === "FORCE_CHECK") {
       const existing = document.getElementById("bpf-widget");
