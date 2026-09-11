@@ -1,0 +1,110 @@
+#bpf-widget {
+  all: initial;
+  position: fixed;
+  z-index: 2147483647;
+  bottom: 20px;
+  right: 20px;
+  font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+#bpf-widget * {
+  box-sizing: border-box;
+}
+
+#bpf-widget .bpf-card {
+  width: 280px;
+  background: #F5F6F3;
+  color: #1B1F1D;
+  border-left: 4px solid #2F6844;
+  border-radius: 4px;
+  box-shadow: 0 10px 24px -8px rgba(20, 26, 22, 0.35);
+  overflow: hidden;
+  animation: bpf-rise 220ms ease-out;
+}
+
+@keyframes bpf-rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+#bpf-widget .bpf-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 10px 10px 12px;
+  background: #E4E8E2;
+}
+
+#bpf-widget .bpf-tag-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #E8A33D;
+  flex-shrink: 0;
+}
+
+#bpf-widget .bpf-title {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.1px;
+}
+
+#bpf-widget .bpf-close {
+  all: unset;
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  color: #5B615C;
+  padding: 2px 4px;
+}
+
+#bpf-widget .bpf-close:hover {
+  color: #1B1F1D;
+}
+
+#bpf-widget .bpf-body {
+  padding: 12px;
+}
+
+#bpf-widget .bpf-line {
+  margin: 0 0 8px 0;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+#bpf-widget .bpf-line strong {
+  font-variant-numeric: tabular-nums;
+  color: #2F6844;
+}
+
+#bpf-widget .bpf-note {
+  margin: 0 0 8px 0;
+  font-size: 12px;
+  color: #5B615C;
+  line-height: 1.4;
+}
+
+#bpf-widget .bpf-link {
+  display: inline-block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #2F6844;
+  text-decoration: none;
+}
+
+#bpf-widget .bpf-link:hover {
+  text-decoration: underline;
+}
+
+#bpf-widget .bpf-linklist {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
